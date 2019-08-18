@@ -9,6 +9,12 @@ bin/
 .classpath
 .project
 .settings
+*/.project
+*/.classpath
+*/.settings
+target/*
+*/target
+*/target/*
 
 
 # Package Files #
