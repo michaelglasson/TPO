@@ -151,7 +151,7 @@ public class TPOService {
 		public QualService.Qual qual;
 		public String issuingAuthority;
 		public String tPOQualName;
-		public String yearAwarded;
+		public int yearAwarded;
 		public boolean verified;
 	}
 
