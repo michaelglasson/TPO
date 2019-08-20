@@ -3,6 +3,7 @@ package au.gov.agriculture.TPO;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
@@ -15,9 +16,17 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 
 import au.gov.agriculture.TPO.QualService.Qual;
+import au.gov.agriculture.TPO.QualService.QualListWrapper;
+import au.gov.agriculture.TPO.QualService.Row;
+import au.gov.agriculture.TPO.QualService.Value;
 
 /*
  * A given business process involves participants who play certain roles. A role is specific to
@@ -31,6 +40,9 @@ import au.gov.agriculture.TPO.QualService.Qual;
 @Path("roles")
 public class RoleService {
 	private List<Role> roles = new ArrayList<>();
+	private static final Client client = ClientBuilder.newClient();
+	private static final WebTarget tgt = client.target("http://localhost:5984/roles");
+
 
 	@Inject
 	private QualService qualService;
@@ -38,33 +50,33 @@ public class RoleService {
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
 	public List<Role> listRoles() {
-		return roles;
+		RoleListWrapper l = tgt.path("_all_docs").queryParam("include_docs", "true").request(MediaType.APPLICATION_JSON)
+				.get(RoleListWrapper.class);
+		return l.rows.stream().map(x -> x.doc).collect(Collectors.toList());
 	}
 
 	@GET
 	@Path("{roleId}")
 	@Produces(MediaType.APPLICATION_JSON)
-	public Role findRole(@PathParam("roleId") String roleId) {
-		return roles.stream().filter(x -> roleId.equals(x.roleId)).findAny().orElse(null);
+	public Response findRole(@PathParam("roleId") String roleId) {
+		return tgt.path(roleId).request(MediaType.APPLICATION_JSON).get();
 	}
 
 	@PUT
 	@Path("{roleId}")
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
-	public Role putRole(@PathParam("roleId") String roleId, Role r) {
+	public Response putRole(@PathParam("roleId") String roleId, Role r) {
 		r.roleId = roleId;
-		roles.add(r);
-		return r;
+		return tgt.path(roleId).request(MediaType.APPLICATION_JSON).put(Entity.entity(r, MediaType.APPLICATION_JSON));
 	}
 
 	@POST
 	@Produces(MediaType.APPLICATION_JSON)
 	@Consumes(MediaType.APPLICATION_JSON)
-	public Role postRole(Role r) {
+	public Response postRole(Role r) {
 		r.roleId = UUID.randomUUID().toString();
-		roles.add(r);
-		return r;
+		return tgt.path(r.roleId).request(MediaType.APPLICATION_JSON).put(Entity.entity(r, MediaType.APPLICATION_JSON));
 	}
 
 	@GET
@@ -96,4 +108,23 @@ public class RoleService {
 		public String jurisdiction; // Government or regulatory environment
 		public List<QualService.Qual> requiredQuals = new ArrayList<>();
 	}
+	
+	public static class RoleListWrapper {
+		public String total_rows;
+		public int offset;
+		public List<Row> rows = new ArrayList<>();
+	}
+
+	public static class Row {
+		public String id;
+		public String key;
+		public Value value;
+		public Role doc;
+	}
+
+	public static class Value {
+		public String rev;
+	}
+	
+	
 }

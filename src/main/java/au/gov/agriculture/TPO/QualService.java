@@ -1,7 +1,9 @@
 package au.gov.agriculture.TPO;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import javax.inject.Singleton;
 import javax.json.bind.annotation.JsonbProperty;
@@ -17,7 +19,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -36,16 +37,11 @@ public class QualService {
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public String listQuals() {
-		String l= tgt.path("_all_docs").queryParam("include_docs", "true").request(MediaType.APPLICATION_JSON)
-				.get(String.class);
-		System.out.println(l == null);
-		return l;
-		/*
-		 * public List<Qual> listQuals() { List<Qual> l=
-		 * tgt.request(MediaType.APPLICATION_JSON) .get(new GenericType<List<Qual>>()
-		 * {}); System.out.println(l == null); return l;
-		 */	}
+	public List<Qual> listQuals() {
+		QualListWrapper l = tgt.path("_all_docs").queryParam("include_docs", "true").request(MediaType.APPLICATION_JSON)
+				.get(QualListWrapper.class);
+		return l.rows.stream().map(x -> x.doc).collect(Collectors.toList());
+	}
 
 	@GET
 	@Path("{qualId}")
@@ -60,17 +56,15 @@ public class QualService {
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response putQual(@PathParam("qualId") String qualId, Qual q) {
 		q.qualId = qualId;
-		return tgt.path(qualId).request(MediaType.APPLICATION_JSON)
-				.put(Entity.entity(q, MediaType.APPLICATION_JSON));
+		return tgt.path(qualId).request(MediaType.APPLICATION_JSON).put(Entity.entity(q, MediaType.APPLICATION_JSON));
 	}
 
 	@POST
 	@Consumes(MediaType.APPLICATION_JSON)
 	@Produces(MediaType.APPLICATION_JSON)
 	public Response postQual(Qual q) {
-		q.qualId = UUID.randomUUID().toString(); // Use as key
-		return tgt.path(q.qualId).request(MediaType.APPLICATION_JSON)
-				.put(Entity.entity(q, MediaType.APPLICATION_JSON));
+		q.qualId = UUID.randomUUID().toString();
+		return tgt.path(q.qualId).request(MediaType.APPLICATION_JSON).put(Entity.entity(q, MediaType.APPLICATION_JSON));
 	}
 
 	@JsonbPropertyOrder({ "qualId", "expertise", "level", "authorityType" })
@@ -82,5 +76,22 @@ public class QualService {
 		public String authorityType;
 		public String expertise;
 		public int level;
+	}
+
+	public static class QualListWrapper {
+		public String total_rows;
+		public int offset;
+		public List<Row> rows = new ArrayList<>();
+	}
+
+	public static class Row {
+		public String id;
+		public String key;
+		public Value value;
+		public Qual doc;
+	}
+
+	public static class Value {
+		public String rev;
 	}
 }
