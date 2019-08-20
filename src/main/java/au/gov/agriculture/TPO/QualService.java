@@ -1,6 +1,5 @@
 package au.gov.agriculture.TPO;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -18,6 +17,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -31,15 +31,21 @@ import javax.ws.rs.core.Response;
 @Singleton
 @Path("quals")
 public class QualService {
-	private List<Qual> quals = new ArrayList<>();
 	private static final Client client = ClientBuilder.newClient();
 	private static final WebTarget tgt = client.target("http://localhost:5984/quals");
 
 	@GET
 	@Produces(MediaType.APPLICATION_JSON)
-	public List<Qual> listQuals() {
-		return quals;
-	}
+	public String listQuals() {
+		String l= tgt.path("_all_docs").queryParam("include_docs", "true").request(MediaType.APPLICATION_JSON)
+				.get(String.class);
+		System.out.println(l == null);
+		return l;
+		/*
+		 * public List<Qual> listQuals() { List<Qual> l=
+		 * tgt.request(MediaType.APPLICATION_JSON) .get(new GenericType<List<Qual>>()
+		 * {}); System.out.println(l == null); return l;
+		 */	}
 
 	@GET
 	@Path("{qualId}")

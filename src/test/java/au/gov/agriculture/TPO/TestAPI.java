@@ -2,10 +2,13 @@ package au.gov.agriculture.TPO;
 
 import static org.junit.Assert.assertEquals;
 
+import java.util.List;
+
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -45,6 +48,19 @@ public class TestAPI {
 				.put(Entity.entity(q, MediaType.APPLICATION_JSON));
 		assertEquals(r.getStatus(), Response.Status.CREATED.getStatusCode());
 	}
+	
+	@Test
+	public void testListQuals() {
+		String l = target.path("quals").request(MediaType.APPLICATION_JSON)
+				.get(String.class);
+		System.out.println(l);
+		
+		/*
+		 * List<Qual> l = target.path("quals").request(MediaType.APPLICATION_JSON)
+		 * .get(new GenericType<List<Qual>>() {}); assertEquals(1, l.size());
+		 */	}
+	
+	
 	
 	@Test
 	public void updateQual() {

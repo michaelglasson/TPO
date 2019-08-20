@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
+import javax.json.bind.annotation.JsonbProperty;
 import javax.json.bind.annotation.JsonbPropertyOrder;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -86,7 +87,10 @@ public class RoleService {
 
 	@JsonbPropertyOrder({ "roleId", "name", "processName", "jurisdiction" })
 	public static class Role {
+		@JsonbProperty("_id")
 		public String roleId;
+		@JsonbProperty("_rev")
+		public String rev;
 		public String name; // Role performed in process, e.g. Inspector
 		public String processName; // Name of process in jurisdiction, e.g. Inspection
 		public String jurisdiction; // Government or regulatory environment
